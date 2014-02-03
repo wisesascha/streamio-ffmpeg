@@ -64,14 +64,19 @@ module FFMPEG
           next_line = Proc.new do |line|
             fix_encoding(line)
             @output << line
-            if line.include?("time=")
+            if line.include?("time=") && line.include?("fps=")
               if line =~ /time=(\d+):(\d+):(\d+.\d+)/ # ffmpeg 0.8 and above style
                 time = ($1.to_i * 3600) + ($2.to_i * 60) + $3.to_f
               else # better make sure it wont blow up in case of unexpected output
                 time = 0.0
               end
+              if line =~ /fps=(\d+)/
+                fps = $1
+              else
+                fps = 0
+              end
               progress = time / @movie.duration
-              yield(progress) if block_given?
+              yield([progress, fps]) if block_given?
             end
           end
 
